@@ -1,0 +1,6 @@
+outs:
+- md5: 5ec2ed8fa10232e6b5e020bd75c0063e.dir
+  size: 1142817003
+  nfiles: 17736
+  hash: md5
+  path: corruptions
