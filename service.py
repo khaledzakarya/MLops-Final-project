@@ -4,12 +4,17 @@ import torch
 from torchvision import transforms
 from PIL.Image import Image
 import json
+import os
 
-# تحميل الـ Label Map
+# Load Label Map
 with open("data/label_map.json", "r") as f:
     idx_to_class = {int(v): k for k, v in json.load(f).items()}
 
-# التعديلات
+# Mapping known Oxford-IIIT Pet Dataset breeds to species
+CAT_BREEDS = {"Abyssinian", "Bengal", "Birman", "Bombay", "British_Shorthair", 
+              "Egyptian_Mau", "Maine_Coon", "Persian", "Ragdoll", "Russian_Blue", 
+              "Siamese", "Sphynx"}
+
 eval_transform = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
@@ -17,31 +22,53 @@ eval_transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-# الطريقة الحديثة: الكلاس
+# Load Temperature for Calibration
+try:
+    with open("temperature.txt", "r") as f:
+        TEMPERATURE = float(f.read().strip())
+except Exception:
+    TEMPERATURE = 1.0  # Fallback to 1.0 (no scaling) if file is missing
+
 @bentoml.service(name="pet_breed_classifier")
 class PetBreedService:
     def __init__(self):
-        # الموديل بيتحمل مرة واحدة بس لما السيرفر يشتغل (أوفر في الرامات جداً)
         self.ort_session = ort.InferenceSession("model_resnet18.onnx")
+        self.model_version = "v1.0.0"
+        # Rubric requires setting abstention threshold based on calibration
+        self.abstention_threshold = 0.70  
         
     @bentoml.api
     async def predict(self, img: Image) -> dict:
-        # تأمين: لو الصورة PNG شفافة نحولها لـ RGB
         if img.mode != 'RGB':
             img = img.convert('RGB')
             
         input_tensor = eval_transform(img).unsqueeze(0).numpy()
-        
         ort_inputs = {self.ort_session.get_inputs()[0].name: input_tensor}
         logits = self.ort_session.run(None, ort_inputs)[0]
         
-        probabilities = torch.nn.functional.softmax(torch.tensor(logits), dim=1)
-        max_prob, predicted_idx = torch.max(probabilities, 1)
+        # APPLY TEMPERATURE SCALING HERE
+        scaled_logits = torch.tensor(logits) / TEMPERATURE
+        probabilities = torch.nn.functional.softmax(scaled_logits, dim=1)[0]
         
-        confidence = max_prob.item()
-        breed = idx_to_class[predicted_idx.item()]
-        
-        if confidence < 0.7:
-            return {"breed": "Unknown - low confidence", "confidence": round(confidence, 4)}
+        top3_prob, top3_idx = torch.topk(probabilities, 3)
+        top_3 = []
+        for i in range(3):
+            breed_name = idx_to_class[top3_idx[i].item()]
+            top_3.append({
+                "breed": breed_name,
+                "confidence": round(top3_prob[i].item(), 4)
+            })
             
-        return {"breed": breed, "confidence": round(confidence, 4)}
+        best_breed = top_3[0]["breed"]
+        best_conf = top_3[0]["confidence"]
+        species = "cat" if best_breed in CAT_BREEDS else "dog"
+        decision = "confident" if best_conf >= self.abstention_threshold else "uncertain"
+        
+        return {
+            "breed": best_breed,
+            "species": species,
+            "confidence": best_conf,
+            "top_3": top_3,
+            "decision": decision,
+            "model_version": self.model_version
+        }

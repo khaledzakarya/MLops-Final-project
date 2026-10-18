@@ -6,6 +6,7 @@ include:
   - "service.py"
   - "model_resnet18.onnx"
   - "data/label_map.json"
+  - "temperature.txt"
 python:
   packages:
     - onnxruntime>=1.15.0
