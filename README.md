@@ -52,11 +52,20 @@ Once the stack is running, you can access:
 - **Prometheus:** [http://localhost:9090](http://localhost:9090)
 - **Grafana:** [http://localhost:3000](http://localhost:3000) (User: `admin`, Password: `admin`)
 
-### 4. Data Drift Detection
+### ⚠️ Troubleshooting: Constrained Environments
+If you are reviewing this project in a constrained environment (e.g., GitHub Codespaces) and the Docker containerization in Step 3 fails , you can bypass Docker to quickly test the model. 
+
+Run the lightweight BentoML server directly:
+```bash
+bentoml serve pet_breed_classifier:latest
+```
+*The API will then be available at [http://localhost:3000](http://localhost:3000).*
+
+### 6. Data Drift Detection
 To run the drift detector on the corrupted data and generate a new report:
     python monitor_drift.py
 
-*Note: A pre-generated HTML report is already available in the reports/ directory.*
+*Note: this option is not available now because we can no access data from DVC Due to Google drive security -> A pre-generated HTML report is already available in the reports/ directory.*
 
 ##  Repository Structure
 - service.py: BentoML API definition.
