@@ -21,8 +21,9 @@ def test_logit_agreement():
     pytorch_model = models.resnet18(weights=None)
     pytorch_model.fc = nn.Linear(pytorch_model.fc.in_features, num_classes)
     
-    # Load weights safely
-    pytorch_model.load_state_dict(torch.load("best_model_resnet18.pth", map_location='cpu', weights_only=True))
+    state_dict = torch.load("best_model_resnet18.pth", map_location='cpu', weights_only=True)
+    clean_state_dict = {k.replace('model.', ''): v for k, v in state_dict.items()}
+    pytorch_model.load_state_dict(clean_state_dict)
     pytorch_model.eval()
 
     with torch.no_grad():
