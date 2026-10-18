@@ -1,6 +1,6 @@
 # Pet Breed Classifier - MLOps Pipeline (Track C)
 
-This repository contains a complete end-to-end Machine Learning Operations (MLOps) pipeline for a Pet Breed Classification model, fulfilling all Track C requirements.
+This repository contains a complete end-to-end Machine Learning Operations (MLOps) pipeline for a Pet Breed Classification model
 
 ##  Project Overview
 - **Model**: ResNet18 trained on a custom pet breed dataset.
