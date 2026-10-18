@@ -11,16 +11,33 @@ This repository contains a complete end-to-end Machine Learning Operations (MLOp
 
 ##  How to Run
 
-### 1. Start the API and Monitoring Stack
-Run the following command:
-    docker-compose up -d
+### 1. Download Model Weights
+Due to recent Google Drive Security policies blocking the default DVC OAuth app, we provided a fallback script to fetch the models directly from GitHub Releases:
+
+```bash
+bash pull_models.sh
+```
+
+### 2. Build the Model Service
+Pack the model and the API into a Bento:
+
+```bash
+bentoml build
+```
+
+### 3. Start the API and Monitoring Stack
+Run the following command to spin up the containers:
+
+```bash
+docker-compose up -d --build
+```
 
 This single command will spin up:
-- **BentoML API**: http://localhost:8000
-- **Prometheus**: http://localhost:9090
-- **Grafana**: http://localhost:3000 (User: admin, Password: admin)
+- **BentoML API:** http://localhost:8000
+- **Prometheus:** http://localhost:9090
+- **Grafana:** http://localhost:3000 (User: admin, Password: admin)
 
-### 2. Data Drift Detection
+### 4. Data Drift Detection
 To run the drift detector on the corrupted data and generate a new report:
     python monitor_drift.py
 
