@@ -9,7 +9,12 @@ This repository contains a complete end-to-end Machine Learning Operations (MLOp
 - **Monitoring**: Evidently (Data Drift) + Prometheus & Grafana (System/API Metrics).
 - **Optimization**: Post-Training Quantization (PTQ) to INT8 using ONNX Runtime.
 
-##  How to Run
+### 0. Environment Setup
+This project uses `pyproject.toml` for modern dependency management. Before running anything, install the required packages:
+
+```bash
+pip install .
+```
 
 ### 1. Download Model Weights
 Due to recent Google Drive Security policies blocking the default DVC OAuth app, we provided a fallback script to fetch the models directly from GitHub Releases:
@@ -18,24 +23,34 @@ Due to recent Google Drive Security policies blocking the default DVC OAuth app,
 bash pull_models.sh
 ```
 
-### 2. Build the Model Service
-Pack the model and the API into a Bento:
+### 2. Run Quality Gates (Optional)
+To verify that the model weights are loaded correctly and the ONNX model matches the PyTorch baseline, run the tests:
+
+```bash
+python test_logits.py
+```
+
+### 3. Build and Containerize the Model Service
+Pack the model and the API into a Bento, then build the Docker image so it can be picked up by Docker Compose:
 
 ```bash
 bentoml build
+bentoml containerize pet_breed_classifier:latest -t pet-breed:latest
 ```
+*(Note to Reviewer: If you run this in GitHub Codespaces and encounter a "No space left on device" error, you can free up space by running `docker system prune -a -f --volumes` before running the containerize command).*
 
-### 3. Start the API and Monitoring Stack
+### 4. Start the API and Monitoring Stack
 Run the following command to spin up the containers:
 
 ```bash
-docker-compose up -d --build
+docker-compose up -d
 ```
 
-This single command will spin up:
-- **BentoML API:** http://localhost:8000
-- **Prometheus:** http://localhost:9090
-- **Grafana:** http://localhost:3000 (User: admin, Password: admin)
+### 5. Access the Services
+Once the stack is running, you can access:
+- **BentoML API (Swagger UI):** [http://localhost:8000](http://localhost:8000) *(Use this to test image classification)*
+- **Prometheus:** [http://localhost:9090](http://localhost:9090)
+- **Grafana:** [http://localhost:3000](http://localhost:3000) (User: `admin`, Password: `admin`)
 
 ### 4. Data Drift Detection
 To run the drift detector on the corrupted data and generate a new report:

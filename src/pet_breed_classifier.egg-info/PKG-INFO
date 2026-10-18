@@ -1,0 +1,75 @@
+Metadata-Version: 2.4
+Name: pet_breed_classifier
+Version: 1.0.0
+Summary: ITI MLOps Track C: Pet Breed Classification
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: torch>=2.0.0
+Requires-Dist: torchvision>=0.15.0
+Requires-Dist: fastapi>=0.100.0
+Requires-Dist: uvicorn>=0.23.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: python-multipart>=0.0.6
+Requires-Dist: Pillow>=9.0.0
+Requires-Dist: onnx>=1.14.0
+Requires-Dist: onnxruntime>=1.15.0
+Requires-Dist: dvc[gdrive]>=3.0.0
+Requires-Dist: bentoml>=1.1.0
+Requires-Dist: evidently>=0.4.0
+Requires-Dist: locust>=2.15.0
+Requires-Dist: mlflow>=2.5.0
+
+# Pet Breed Classifier - MLOps Pipeline (Track C)
+
+This repository contains a complete end-to-end Machine Learning Operations (MLOps) pipeline for a Pet Breed Classification model, fulfilling all Track C requirements.
+
+##  Project Overview
+- **Model**: ResNet18 trained on a custom pet breed dataset.
+- **Serving**: BentoML API with Docker containerization.
+- **CI/CD**: GitHub Actions for linting, ONNX logit agreement tests, and baseline quality gates.
+- **Monitoring**: Evidently (Data Drift) + Prometheus & Grafana (System/API Metrics).
+- **Optimization**: Post-Training Quantization (PTQ) to INT8 using ONNX Runtime.
+
+##  How to Run
+
+### 1. Download Model Weights
+Due to recent Google Drive Security policies blocking the default DVC OAuth app, we provided a fallback script to fetch the models directly from GitHub Releases:
+
+```bash
+bash pull_models.sh
+```
+
+### 2. Build the Model Service
+Pack the model and the API into a Bento:
+
+```bash
+bentoml build
+```
+
+### 3. Start the API and Monitoring Stack
+Run the following command to spin up the containers:
+
+```bash
+docker-compose up -d --build
+```
+
+This single command will spin up:
+- **BentoML API:** http://localhost:8000
+- **Prometheus:** http://localhost:9090
+- **Grafana:** http://localhost:3000 (User: admin, Password: admin)
+
+### 4. Data Drift Detection
+To run the drift detector on the corrupted data and generate a new report:
+    python monitor_drift.py
+
+*Note: A pre-generated HTML report is already available in the reports/ directory.*
+
+##  Repository Structure
+- service.py: BentoML API definition.
+- bentofile.yaml: BentoML build configuration.
+- monitor_drift.py: Evidently drift detection script.
+- .github/workflows/ci.yml: Automated CI/CD pipeline.
+- test_baseline.py & test_logits.py: Quality gate tests.
+- docker-compose.yml: Orchestration for API, Prometheus, and Grafana.
+- prometheus.yml: Prometheus scraping configuration.
+- reports/: HTML reports for data drift detection.
