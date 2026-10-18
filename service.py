@@ -6,11 +6,9 @@ from PIL.Image import Image
 import json
 import os
 
-# Load Label Map
 with open("data/label_map.json", "r") as f:
     idx_to_class = {int(v): k for k, v in json.load(f).items()}
 
-# Mapping known Oxford-IIIT Pet Dataset breeds to species
 CAT_BREEDS = {"Abyssinian", "Bengal", "Birman", "Bombay", "British_Shorthair", 
               "Egyptian_Mau", "Maine_Coon", "Persian", "Ragdoll", "Russian_Blue", 
               "Siamese", "Sphynx"}
@@ -22,21 +20,29 @@ eval_transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-# Load Temperature for Calibration
 try:
     with open("temperature.txt", "r") as f:
         TEMPERATURE = float(f.read().strip())
 except Exception:
-    TEMPERATURE = 1.0  # Fallback to 1.0 (no scaling) if file is missing
+    TEMPERATURE = 1.0
 
 @bentoml.service(name="pet_breed_classifier")
 class PetBreedService:
     def __init__(self):
         self.ort_session = ort.InferenceSession("model_resnet18.onnx")
         self.model_version = "v1.0.0"
-        # Rubric requires setting abstention threshold based on calibration
+        self.num_classes = 37
         self.abstention_threshold = 0.70  
         
+    # --- NEW: Health Check Endpoint for Docker ---
+    @bentoml.api(route="/health")
+    def health(self) -> dict:
+        return {
+            "status": "healthy",
+            "model_version": self.model_version,
+            "num_classes": self.num_classes
+        }
+
     @bentoml.api
     async def predict(self, img: Image) -> dict:
         if img.mode != 'RGB':
@@ -46,7 +52,6 @@ class PetBreedService:
         ort_inputs = {self.ort_session.get_inputs()[0].name: input_tensor}
         logits = self.ort_session.run(None, ort_inputs)[0]
         
-        # APPLY TEMPERATURE SCALING HERE
         scaled_logits = torch.tensor(logits) / TEMPERATURE
         probabilities = torch.nn.functional.softmax(scaled_logits, dim=1)[0]
         
