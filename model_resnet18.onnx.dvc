@@ -1,0 +1,5 @@
+outs:
+- md5: 3f42ac32170fa579b6010f44f233ee51
+  size: 44773417
+  hash: md5
+  path: model_resnet18.onnx
