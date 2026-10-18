@@ -36,7 +36,7 @@ def generate_evidently_report():
     ref_df = build_features_dataframe("data/images", "reference")
     
     # CORRECTED FOLDER NAME
-    corrupted_dir = "data/corruption"
+    corrupted_dir = "data/corruptions"
     
     if os.path.exists(corrupted_dir) and len(glob.glob(os.path.join(corrupted_dir, "*.jpg"))) > 0:
         print(f"✅ Found ACTUAL corrupted images in '{corrupted_dir}'! Calculating real drift...")
