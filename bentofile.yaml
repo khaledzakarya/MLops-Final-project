@@ -1,0 +1,14 @@
+service: "service:PetBreedService"
+labels:
+  owner: khaledzakarya
+  project: pet_breed_classifier
+include:
+  - "service.py"
+  - "model_resnet18.onnx"
+  - "data/label_map.json"
+python:
+  packages:
+    - onnxruntime>=1.15.0
+    - torch>=2.0.0
+    - torchvision>=0.15.0
+    - Pillow>=9.0.0
