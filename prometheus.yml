@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'bentoml_model'
+    static_configs:
+      - targets: ['pet-breed-service:3000']
