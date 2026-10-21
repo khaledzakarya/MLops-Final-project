@@ -59,14 +59,14 @@ bentoml containerize pet_breed_classifier:latest -t pet-breed:latest
 Run the following command to spin up the containers:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 3. Access the Services
 Once the stack is running, you can access:
 - **BentoML API (Swagger UI):** [http://localhost:8000](http://localhost:8000) *(Use this to test image classification)*
 - **Prometheus:** [http://localhost:9090](http://localhost:9090)
-- **Grafana:** [http://localhost:3000](http://localhost:3000) (User: `admin`, Password: `admin`)
+- **Grafana:** [http://localhost:3000](http://localhost:3000) (User: `admin`, Password: `admin` (if asked))
 
 ### ⚠️ Troubleshooting: Constrained Environments
 If you are reviewing this project in a constrained environment (e.g., GitHub Codespaces) and the Docker containerization in Step 3 fails , you can bypass Docker to quickly test the model. 
