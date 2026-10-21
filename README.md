@@ -10,12 +10,27 @@ This repository contains a complete end-to-end Machine Learning Operations (MLOp
 - **Optimization**: Post-Training Quantization (PTQ) to INT8 using ONNX Runtime.
 
 ### 0. Environment Setup
-This project uses `pyproject.toml` for modern dependency management. Before running anything, install the required packages:
+
+This project uses `pyproject.toml` with optional dependencies to prevent storage issues on cloud environments (like GitHub Codespaces) while supporting full local GPU setups. We provide a `Makefile` to simplify the installation.
+
+**Option A: Quick Test for Cloud Environments (Codespaces, Play with Docker)**  
+If you are running this on a cloud VM with limited space, run the following single command. It installs a lightweight CPU-only PyTorch, fetches the model weights, and runs the baseline tests automatically:
 
 ```bash
-pip install .
+make quick-test
 ```
 
+**Option B: Local Development with GPU Support**  
+If you are running this locally (e.g., on an Ubuntu machine with a dedicated GPU), install the GPU-enabled dependencies and manually pull the models:
+
+```bash
+make install-gpu
+bash pull_models.sh
+python test_logits.py
+```
+*(Note: To include Google Drive DVC support, use `make install-full` instead).*
+
+<!--
 ### 1. Download Model Weights
 Due to recent Google Drive Security policies blocking the default DVC OAuth app, we provided a fallback script to fetch the models directly from GitHub Releases:
 
@@ -29,8 +44,9 @@ To verify that the model weights are loaded correctly and the ONNX model matches
 ```bash
 python test_logits.py
 ```
+-->
 
-### 3. Build and Containerize the Model Service
+### 1. Build and Containerize the Model Service
 Pack the model and the API into a Bento, then build the Docker image so it can be picked up by Docker Compose:
 
 ```bash
@@ -39,14 +55,14 @@ bentoml containerize pet_breed_classifier:latest -t pet-breed:latest
 ```
 *(Note to Reviewer: If you run this in GitHub Codespaces and encounter a "No space left on device" error, you can free up space by running `docker system prune -a -f --volumes` before running the containerize command).*
 
-### 4. Start the API and Monitoring Stack
+### 2. Start the API and Monitoring Stack
 Run the following command to spin up the containers:
 
 ```bash
 docker-compose up -d
 ```
 
-### 5. Access the Services
+### 3. Access the Services
 Once the stack is running, you can access:
 - **BentoML API (Swagger UI):** [http://localhost:8000](http://localhost:8000) *(Use this to test image classification)*
 - **Prometheus:** [http://localhost:9090](http://localhost:9090)
@@ -61,7 +77,7 @@ bentoml serve pet_breed_classifier:latest
 ```
 *The API will then be available at [http://localhost:3000](http://localhost:3000).*
 
-### 6. Data Drift Detection
+### 4. Data Drift Detection
 To run the drift detector on the corrupted data and generate a new report:
     python monitor_drift.py
 
